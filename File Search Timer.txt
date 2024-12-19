@@ -1,0 +1,40 @@
+# Variables
+$keyword = "Nick"  # The keyword to search for in filenames
+$networkPath = "\\azn-fs1\shared"  # Root path of the network drive
+$address = "\\azn-fs1\shared\Nick\RMDB\Nicks Copy of RMDB 2020.xlsx" # Exact file path of the target file
+
+# Record the start time
+$startTime = Get-Date
+Write-Host "Searching for '$keyword' in '$networkPath'..."
+
+# Initialize a flag to track if the target file was found
+$found = $false
+
+# Perform the search and process results as they are found
+Get-ChildItem -Path $networkPath -Recurse -ErrorAction SilentlyContinue | Where-Object {
+    $_.Name -like "*$keyword*"
+} | ForEach-Object {
+    # Check if the current item's full path matches the target file
+    if ($_.FullName -eq $address) {
+        # Target file found - record end time, duration
+        $endTime = Get-Date
+        $duration = $endTime - $startTime
+
+        Write-Host "Target file found: $($_.FullName)"
+        Write-Host "Search stopped at $endTime."
+        Write-Host "Total time taken: $($duration.TotalSeconds) seconds."
+
+        $found = $true
+        # Stop the pipeline execution
+        break
+    }
+}
+
+# If we reach here and $found is still $false, the target file wasn't found
+if (-not $found) {
+    $endTime = Get-Date
+    $duration = $endTime - $startTime
+    Write-Host "No items found with keyword '$keyword' that match '$address'."
+    Write-Host "Search completed at $endTime."
+    Write-Host "Total time taken: $($duration.TotalSeconds) seconds."
+}
